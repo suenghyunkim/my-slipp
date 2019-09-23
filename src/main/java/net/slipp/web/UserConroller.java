@@ -33,12 +33,12 @@ public class UserConroller {
 			return "redirect:/users/loginForm";
 		}
 		
-		if(!password.equals(user.getPassword())) {
+		if(!user.matchPassword(password)) {
 			return "redirect:/users/loginForm";
 		}
 		
 		System.out.println("loginSuccess!");
-		session.setAttribute("sessionedUser", user);
+		session.setAttribute(HttpSessionUtils.USER_SESSION_KEY, user);
 		
 		return "redirect:/";
 	}
@@ -63,13 +63,12 @@ public class UserConroller {
 	
 	@GetMapping("/{id}/form")
 	public String updateForm(@PathVariable Long id,Model model,HttpSession session) {
-		Object tempUser = session.getAttribute("sessionedUser");
-		if(tempUser == null) {
+		if(HttpSessionUtils.isLoginUser(session)) {
 			return "redirect:/users/loginForm";
 		}
 		
-		User sessionedUser = (User)tempUser;
-		if(!id.equals(sessionedUser.getId())) {
+		User sessionedUser = HttpSessionUtils.getUserFromSession(session);
+		if(!sessionedUser.matchId(id)) {
 			throw new IllegalStateException("You can't update the anther user");
 		}
 		
@@ -80,13 +79,12 @@ public class UserConroller {
 	
 	@PutMapping("/{id}")
 	public String update(@PathVariable Long id,User updatedUser,HttpSession session) {
-		Object tempUser = session.getAttribute("sessionedUser");
-		if(tempUser == null) {
+		if(HttpSessionUtils.isLoginUser(session)) {
 			return "redirect:/users/loginForm";
 		}
 		
-		User sessionedUser = (User)tempUser;
-		if(!id.equals(sessionedUser.getId())) {
+		User sessionedUser = HttpSessionUtils.getUserFromSession(session);
+		if(!sessionedUser.matchId(id)) {
 			throw new IllegalStateException("You can't update the anther user");
 		}
 
@@ -98,7 +96,7 @@ public class UserConroller {
 	
 	@GetMapping("/logout")
 	public String logout(HttpSession session) {
-		session.removeAttribute("sessionedUser");
+		session.removeAttribute(HttpSessionUtils.USER_SESSION_KEY);
 		return "redirect:/";
 	}
 }
